@@ -1,0 +1,41 @@
+.advent-calendar {
+    position: relative;
+    overflow: hidden;
+
+}
+
+.door {
+    background-color: rgba(200, 200, 200, 0.5); /* Light gray with transparency */
+    border: 2px solid #ffff;
+    border-radius: 4px;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s, background-color 0.3s;
+    position: absolute;
+    overflow: hidden; /* Ensure content stays within the door boundaries */
+}
+
+.door img {
+    width: 100%; 
+    height: 100%; 
+    object-fit: contain; /* Fit image inside the door while maintaining aspect ratio */
+    display: none; /* Hide images initially */
+}
+
+.door.opened img {
+    display: block; /* Show image when door is opened */
+}
+
+.door:hover {
+    transform: scale(1.05);
+    background-color: rgba(200, 200, 200, 0.7); /* Slightly less transparent on hover */
+}
+
+.door.opened {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+}
