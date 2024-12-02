@@ -5,7 +5,6 @@ It could contain some bugs and may not be perfect at this time. Let me know what
 
 ![Adventskalender](./Example.jpg)
 
-[Module description]
 
 ## Installation
 
