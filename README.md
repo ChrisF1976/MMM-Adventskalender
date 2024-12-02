@@ -1,6 +1,8 @@
 # MMM-Adventskalender
 The MMM-Adventskalender module for MagicMirror is an interactive Advent calendar that displays a grid of doors (24 in total) which open on specific days in December. The module includes various configurable options and functionalities designed to enhance the user experience. 
 
+It could contain some bugs and may not be perfect at this time. Let me know what you notice, and I will try to improve it.
+
 ![Adventskalender](./Example.jpg)
 
 [Module description]
