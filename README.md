@@ -14,7 +14,7 @@ In your terminal, go to your [MagicMirror²][mm] Module folder and clone MMM-Adv
 
 ```bash
 cd ~/MagicMirror/modules
-git clone [GitHub url]
+git clone https://github.com/ChrisF1976/MMM-Adventskalender.git
 ```
 
 ### Update
