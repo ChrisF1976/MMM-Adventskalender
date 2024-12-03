@@ -44,8 +44,13 @@ Module.register("MMM-Adventskalender", {
             wrapper.appendChild(background);
         }
 
-        const doors = this.createDoors();
-        wrapper.appendChild(doors);
+        if (this.doorState) {
+            const doors = this.createDoors();
+            wrapper.appendChild(doors);
+        } else {
+            wrapper.innerHTML = "Loading Advent Calendar...";
+        }
+
         return wrapper;
     },
 
