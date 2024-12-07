@@ -1,21 +1,21 @@
 .advent-calendar {
     position: relative;
     overflow: hidden;
-
 }
 
 .door {
     background-color: rgba(200, 200, 200, 0.5); /* Light gray with transparency */
-    border: 2px solid #ffff;
+    border: 2px solid #fff;
     border-radius: 4px;
     color: white;
     text-align: center;
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s, background-color 0.3s;
     position: absolute;
     overflow: hidden; /* Ensure content stays within the door boundaries */
+    transform-origin: right center; /* Rotate around the right vertical side */
+    transition: background-color 0.3s, box-shadow 0.3s;
 }
 
 .door img {
@@ -25,17 +25,64 @@
     display: none; /* Hide images initially */
 }
 
+.door span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    color: black; /* Ensure the number is visible */
+    z-index: 1;
+    visibility: visible; /* Start with the number visible */
+}
+
+.door.opened span {
+    visibility: hidden; /* Hide the number when the door is opened */
+}
+
+.door.opening span,
+.door.closing span {
+    visibility: hidden; /* Ensure the number is hidden during animations */
+}
+
 .door.opened img {
     display: block; /* Show image when door is opened */
 }
 
+.door.closing img {
+    display: none; /* Hide image when door is closing */
+}
+
+.door.opening img {
+    display: block; /* Show image when opening */
+}
+
+
 .door:hover {
-    transform: scale(1.05);
     background-color: rgba(200, 200, 200, 0.7); /* Slightly less transparent on hover */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
 }
 
 .door.opened {
     background-color: transparent;
     border: none;
     box-shadow: none;
+}
+
+.door.opening {
+    animation: rotate-door 5s forwards; /* Apply opening animation */
+}
+
+.door.closing {
+    animation: rotate-door 5s reverse; /* Apply closing animation in reverse */
+}
+
+/* Keyframe animations */
+@keyframes rotate-door {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(95deg);
+    }
 }
