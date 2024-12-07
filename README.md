@@ -1,5 +1,5 @@
 # MMM-Adventskalender
-The MMM-Adventskalender module for MagicMirror is an interactive Advent calendar that displays a grid of doors (24 in total) which open on specific days in December. The module includes various configurable options and functionalities designed to enhance the user experience. 
+The MMM-Adventskalender is a custom MagicMirror² module designed to display an interactive Advent calendar with 24 numbered doors arranged in a 6x4 grid. Each door corresponds to a date in December (1-24) and hides an image behind it. The module supports manual and automatic door opening, state saving, animations, and a customizable appearance.
 
 It could contain some bugs and may not be perfect at this time. Let me know what you notice, and I will try to improve it.
 
@@ -53,7 +53,7 @@ Option|Possible values|Default|Description
 `doorMargin`|`integer`|margin around each door.
 `moduleWidth`|`string`|not available|total height
 `moduleHeight`|`string`|not available|total width
-`autopen`|`boolean`|false|opens the door of the day automatic. Useful in headless mode.
+`autopen`|`boolean`|true|opens the door of the day automatic. Useful in headless mode.
 `autopenat`|`string`|"00:00"|defines the time when the door should open.
 
 
@@ -63,28 +63,36 @@ Option|Possible values|Default|Description
 - I took the pictures as a proof of concept from [Pixabay]: https://pixabay.com
 
 ## Features:
-### Fixed Grid Layout:
-The calendar consists of 24 doors, arranged in a 6x4 grid (6 columns and 4 rows). The size and layout of the doors adjust dynamically based on the module's dimensions and spacing configurations.
-### Background Image:
-The background of the calendar is customizable, allowing the user to specify an image (e.g., a festive background) that will fill the entire module's area. This image maintains its aspect ratio and scales to fit the module size.
-### Door Numbering and Images:
-Each door is numbered from 1 to 24. The doors' numbers are randomized (the numbering order, not the positions) and saved in the state.json file to ensure consistency across restarts. When a door is opened, a corresponding image (e.g., numbered images such as 01.jpg, 02.jpg) is displayed behind the door. Each door has an image that is hidden until opened.
-### Opening Doors:
-Doors can be opened by clicking on them. When clicked, the door "opens," revealing an image behind it. Once opened, the door remains open across all sessions (persistent state) and will be saved in state.json.
-### Automatic Opening (Auto Open):
-With the autopen option enabled, doors corresponding to dates earlier than the current day are opened automatically when the module starts. Additionally, the door for the current day will open at a specified time (autoopenat), which can be configured (e.g., 10:00 AM). If the time specified in autoopenat has already passed when the module is started, the current door will automatically open as well.
-### Responsive Design:
-The module adjusts the layout of the doors based on the overall module size (moduleWidth and moduleHeight) and the margin between them (doorMargin). The doors are arranged to fit within the designated module space while maintaining consistent sizing and spacing.
-### Persistent State:
-The module uses a state.json file to store the status of each door (whether it's open or closed). This ensures that the opened doors remain open when the module restarts, and the door numbering persists.
-### User Interaction:
-Users can interact with the doors by clicking on them to reveal the corresponding images. Only doors for previous days are openable, while doors for future dates are disabled and unclickable until their date arrives.
-### Configurable Options:
-The module offers a range of customizable settings in config.js, such as:
- - backgroundImage: The background image for the Advent calendar.
- - doorMargin: The margin between the doors.
- - moduleWidth and moduleHeight: The size of the module.
- - autopen: Whether doors open automatically for past days.
- - autoopenat: The time at which the current day's door will open if autopen is enabled.
+### Visual Design and Layout
+- Grid Layout: 6x4 grid of 24 doors.
+- Customizable Appearance:
+    - Adjustable module width, height, and door margin.
+    - Optional background image filling the entire module.
+    - CSS animations for door opening and closing effects.
+### Door Interaction
+Manual Door Interaction:
+ - Click to Open/Close: Clicking a closed door opens it with an animated rotation.
+ - Closing Allowed: If enabled, already opened doors can be closed manually.
+### Automatic Features
+Auto-Opening Doors:
+- If enabled (autopen: true), doors corresponding to past or current dates open automatically.
+- Configurable opening time (autoopenat: "HH:MM").
+### Persistent State Management
+State File (state.json):
+ - The door states (opened/closed) and randomized door numbers are saved persistently.
+ - If the state file is missing or corrupted, a new one is created automatically.
+### Animations
+Door Opening Animation:
+ - 3D rotation animation from the right edge when opening.
+ - Reverse animation when closing (if allowed).
+### Module Configuration Options
+Appearance:
+- backgroundImage: Path to a custom background image.
+- moduleWidth, moduleHeight: Adjust module dimensions.
+- doorMargin: Space between doors.
+- Door Behavior:
+    - autopen: Enables automatic door opening (true/false).
+    - autoopenat: Time to open the door automatically (e.g., "10:00").
+
 
 [mm]: https://github.com/MagicMirrorOrg/MagicMirror
