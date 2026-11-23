@@ -6,7 +6,8 @@ Module.register("MMM-Adventskalender", {
         moduleHeight: 600,
         autopen: true,
         autoopenat: "00:00",
-        openAnimationTime: "5s"
+        openAnimationTime: "5s",
+        showCursor: true
     },
 
     start() {
@@ -56,6 +57,9 @@ Module.register("MMM-Adventskalender", {
     getDom() {
         const wrapper = document.createElement("div");
         wrapper.className = "advent-calendar";
+        if (this.config.showCursor) {
+            wrapper.classList.add("show-cursor");
+        }
         wrapper.style.width = `${this.config.moduleWidth}px`;
         wrapper.style.height = `${this.config.moduleHeight}px`;
 

@@ -56,8 +56,10 @@ Option|Possible values|Default|Description
 `autopen`|`boolean`|`true`|Opens the door of the day automatically (and all doors of past days). Useful in headless mode. Each door is opened automatically only once, so you can close it again manually.
 `autoopenat`|`string`|`"00:00"`|Time (`"HH:MM"`) when the door of the day opens automatically.
 `openAnimationTime`|`string`|`"5s"`|Duration of the opening/closing animation (CSS time, e.g. `"2s"` or `"800ms"`).
+`showCursor`|`boolean`|`true`|Shows the mouse cursor inside the calendar, even if the cursor is hidden everywhere else in MagicMirror (e.g. by a cursor-hiding module or `cursor: none` in `custom.css`). Set to `false` to keep the cursor hidden, e.g. on touchscreens.
 
 Notes:
+- The cursor override only works for cursors hidden via CSS. If the cursor is hidden at system level (e.g. with `unclutter`), it can't be shown by the module.
 - Doors can only be opened in December. Outside of December all doors stay closed.
 - The state is stored in `state.json`. A new calendar (new random order, all doors closed) is created automatically when the year changes, or when the file is missing or invalid. Delete `state.json` to reset the calendar manually.
 

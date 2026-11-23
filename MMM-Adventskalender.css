@@ -4,6 +4,21 @@
     box-shadow: 4px 8px 16px rgba(0, 0, 0, 0.5);
 }
 
+/*
+ * Show the mouse cursor inside the module, even if it is hidden globally
+ * (e.g. "* { cursor: none !important; }" in custom.css or a cursor-hiding module).
+ * The higher specificity + !important wins over such global rules.
+ */
+.advent-calendar.show-cursor,
+.advent-calendar.show-cursor * {
+    cursor: default !important;
+}
+
+.advent-calendar.show-cursor .door,
+.advent-calendar.show-cursor .door * {
+    cursor: pointer !important;
+}
+
 .advent-background {
     position: absolute;
     left: 0;
