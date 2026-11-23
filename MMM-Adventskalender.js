@@ -5,14 +5,21 @@ Module.register("MMM-Adventskalender", {
         moduleWidth: 800,
         moduleHeight: 600,
         autopen: true,
-        autoopenat: "00:00"
+        autoopenat: "00:00",
+        openAnimationTime: "5s"
     },
 
     start() {
         Log.info("Starting module: " + this.name);
         this.doorState = null;
-        document.documentElement.style.setProperty("--animation-time", this.config.OpenAnimationTime);
+        this.doorElements = [];
+
+        // Support the old (capitalized) option name as well
+        const animationTime = this.config.OpenAnimationTime || this.config.openAnimationTime;
+        document.documentElement.style.setProperty("--advent-animation-time", animationTime);
+
         this.loadDoorState();
+        this.scheduleMidnightReload();
         if (this.config.autopen) {
             this.scheduleAutoOpen();
         }
@@ -22,195 +29,200 @@ Module.register("MMM-Adventskalender", {
         return ["MMM-Adventskalender.css"];
     },
 
+    /* ---------- date helpers ---------- */
+
+    // Day of December (1-31), or 0 when it is not December.
+    getAdventDay() {
+        const now = new Date();
+        return now.getMonth() === 11 ? now.getDate() : 0;
+    },
+
+    getAutoOpenTime() {
+        const [hours, minutes] = String(this.config.autoopenat).split(":").map(Number);
+        const time = new Date();
+        time.setHours(hours || 0, minutes || 0, 0, 0);
+        return time;
+    },
+
+    // Should the door with this number be opened automatically right now?
+    isAutoOpenDue(doorNumber) {
+        const today = this.getAdventDay();
+        if (!this.config.autopen || today === 0) return false;
+        return doorNumber < today || (doorNumber === today && new Date() >= this.getAutoOpenTime());
+    },
+
+    /* ---------- rendering ---------- */
+
     getDom() {
         const wrapper = document.createElement("div");
+        wrapper.className = "advent-calendar";
         wrapper.style.width = `${this.config.moduleWidth}px`;
         wrapper.style.height = `${this.config.moduleHeight}px`;
-        wrapper.style.position = "relative";
-        wrapper.style.overflow = "hidden";
-        wrapper.style.boxShadow = "4px 8px 16px rgba(0, 0, 0, 0.5)";
-        wrapper.className = "advent-calendar";
 
         if (this.config.backgroundImage) {
             const background = document.createElement("img");
+            background.className = "advent-background";
             background.src = this.config.backgroundImage;
-            background.style.width = "100%";
-            background.style.height = "100%";
-            background.style.objectFit = "cover";
-            background.style.position = "absolute";
-            background.style.left = "0";
-            background.style.top = "0";
-            background.style.zIndex = "0";
-            background.style.boxShadow = "4px 8px 16px rgba(0, 0, 0, 0.5)";
             wrapper.appendChild(background);
         }
 
-        const doors = this.createDoors();
-        wrapper.appendChild(doors);
+        if (!this.doorState) {
+            const loading = document.createElement("div");
+            loading.className = "advent-loading dimmed small";
+            loading.textContent = "Loading…";
+            wrapper.appendChild(loading);
+            return wrapper;
+        }
+
+        wrapper.appendChild(this.createDoors());
         return wrapper;
     },
 
     createDoors() {
         const doorsContainer = document.createElement("div");
-        doorsContainer.style.position = "relative";
-        doorsContainer.style.zIndex = "1";
+        doorsContainer.className = "advent-doors";
+        this.doorElements = [];
 
-        const doorWidth = (this.config.moduleWidth - (this.config.doorMargin * 7)) / 6;
-        const doorHeight = (this.config.moduleHeight - (this.config.doorMargin * 5)) / 4;
-
-        const today = new Date().getDate();
-        const [hours, minutes] = this.config.autoopenat.split(":").map(Number);
-        const autoopenTime = new Date();
-        autoopenTime.setHours(hours, minutes, 0);
+        const margin = this.config.doorMargin;
+        const doorWidth = (this.config.moduleWidth - margin * 7) / 6;
+        const doorHeight = (this.config.moduleHeight - margin * 5) / 4;
+        const today = this.getAdventDay();
+        let stateChanged = false;
 
         for (let i = 0; i < 24; i++) {
+            const doorNumber = this.doorState.numbers[i];
+
             const door = document.createElement("div");
             door.className = "door";
             door.style.width = `${doorWidth}px`;
             door.style.height = `${doorHeight}px`;
-
-            const col = i % 6;
-            const row = Math.floor(i / 6);
-
-            door.style.left = `${col * (doorWidth + this.config.doorMargin) + this.config.doorMargin}px`;
-            door.style.top = `${row * (doorHeight + this.config.doorMargin) + this.config.doorMargin}px`;
-            door.style.position = "absolute";
+            door.style.left = `${(i % 6) * (doorWidth + margin) + margin}px`;
+            door.style.top = `${Math.floor(i / 6) * (doorHeight + margin) + margin}px`;
 
             const number = document.createElement("span");
-            number.textContent = this.doorState.numbers[i];
-	    number.classname = "number";
-            number.style.position = "absolute";
-            number.style.top = "50%";
-            number.style.left = "50%";
-            number.style.transform = "translate(-50%, -50%)";
-            number.style.fontSize = "1.5rem";
-            number.style.color = "#000";
+            number.className = "number";
+            number.textContent = doorNumber;
             door.appendChild(number);
 
             const img = document.createElement("img");
-            img.src = `${this.file("images")}/${String(this.doorState.numbers[i]).padStart(2, "0")}.jpg`;
-            img.style.width = "100%";
-            img.style.height = "100%";
-            img.style.objectFit = "cover";
-            img.style.display = "none";
+            img.src = `${this.file("images")}/${String(doorNumber).padStart(2, "0")}.jpg`;
             door.appendChild(img);
 
-            const doorNumber = this.doorState.numbers[i];
-
-        // Open only if autopen is enabled and conditions are met
-        if (
-            this.config.autopen && 
-            (doorNumber < today || 
-            (doorNumber === today && new Date() >= autoopenTime))
-        ) {
-            this.doorState.opened[i] = true;
-        }
+            // Auto-open each door only once, so a door closed manually stays closed
+            if (this.isAutoOpenDue(doorNumber) && !this.doorState.autoOpened[i]) {
+                this.doorState.opened[i] = true;
+                this.doorState.autoOpened[i] = true;
+                stateChanged = true;
+            }
 
             if (this.doorState.opened[i]) {
                 door.classList.add("opened");
-                img.style.display = "block";
             } else if (doorNumber > today) {
-                door.style.pointerEvents = "none";
+                door.classList.add("locked");
             }
 
-door.addEventListener("click", () => {
-    if (door.classList.contains("opened")) {
-        // Close the door manually
-        door.classList.remove("opened");
-        door.classList.add("closing");
-        number.style.visibility = "visible"; // Show the number again
-        img.style.display = "none"; // Hide the image when closing
-    } else if (!door.classList.contains("opening")) {
-        // Open the door if not opening
-        door.classList.add("opening");
-        number.style.visibility = "visible"; // Hide the number during opening
-        img.style.display = "none"; // Show the image during opening
-    }
-        // Update door state and save
-    this.doorState.opened[i] = door.classList.contains("opened");
-    this.sendSocketNotification("SAVE_DOOR_STATE", this.doorState);
-});
+            door.addEventListener("click", () => this.onDoorClick(door, i));
+            door.addEventListener("animationend", (event) => this.onDoorAnimationEnd(event, door, i));
 
-
-
-door.addEventListener("animationend", (event) => {
-    if (event.animationName === "rotate-door") {
-        if (door.classList.contains("opening")) {
-            img.style.display = "block"; // Show the image
-            number.style.visibility = "hidden"; // Hide the number
-            door.classList.remove("opening");
-            door.classList.add("opened");
-        } else if (door.classList.contains("closing")) {
-            img.style.display = "none"; // Hide the image
-            number.style.visibility = "visible"; // Show the number
-            door.classList.remove("closing");
-            door.classList.remove("opened"); // Fully reset to closed state
-            this.doorState.opened[doorNumber - 1] = false; // Reset opened state
-            this.sendSocketNotification("SAVE_DOOR_STATE", this.doorState); // Save state
-        }
-    }
-});
-
-	
-	if (this.doorState.opened[i]) {
-	    door.classList.add("opened");
-	    img.style.display = "block";
-	    number.style.visibility = "hidden"; // Keep the number hidden for auto-opened doors
-	} else if (doorNumber > today) {
-	    door.style.pointerEvents = "none";
-	}
+            this.doorElements[i] = door;
             doorsContainer.appendChild(door);
         }
 
+        if (stateChanged) {
+            this.saveDoorState();
+        }
         return doorsContainer;
     },
 
-    scheduleAutoOpen() {
-        if (!this.config.autopen) return; // Stop if autopen is disabled
+    /* ---------- interaction ---------- */
 
-        const [hours, minutes] = this.config.autoopenat.split(":").map(Number);
-        const now = new Date();
-        const targetTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+    onDoorClick(door, i) {
+        if (door.classList.contains("locked")) return;
+        if (door.classList.contains("opening") || door.classList.contains("closing")) return;
 
-        if (now >= targetTime) {
-            targetTime.setDate(targetTime.getDate() + 1);
+        if (door.classList.contains("opened")) {
+            door.classList.remove("opened");
+            door.classList.add("closing");
+        } else {
+            door.classList.add("opening");
         }
+    },
 
-        const timeUntilAutoOpen = targetTime - now;
+    onDoorAnimationEnd(event, door, i) {
+        if (event.animationName !== "rotate-door") return;
+
+        if (door.classList.contains("opening")) {
+            door.classList.remove("opening");
+            door.classList.add("opened");
+            this.doorState.opened[i] = true;
+            this.saveDoorState();
+        } else if (door.classList.contains("closing")) {
+            door.classList.remove("closing");
+            this.doorState.opened[i] = false;
+            this.saveDoorState();
+        }
+    },
+
+    /* ---------- timers ---------- */
+
+    scheduleAutoOpen() {
+        const now = new Date();
+        const target = this.getAutoOpenTime();
+        if (now >= target) {
+            target.setDate(target.getDate() + 1);
+        }
 
         setTimeout(() => {
             this.autoOpenDoor();
             this.scheduleAutoOpen();
-        }, timeUntilAutoOpen);
+        }, target - now);
     },
 
-autoOpenDoor() {
-    if (!this.config.autopen) return; // Ensure autopen is respected
+    // Reload state shortly after midnight: unlocks the new day's door and
+    // lets the node_helper reset the calendar when a new year starts.
+    scheduleMidnightReload() {
+        const now = new Date();
+        const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
 
-    const today = new Date().getDate();
-    const doorIndex = this.doorState.numbers.indexOf(today);
+        setTimeout(() => {
+            this.loadDoorState();
+            this.scheduleMidnightReload();
+        }, nextMidnight - now);
+    },
 
-    if (doorIndex !== -1 && !this.doorState.opened[doorIndex]) {
-        this.doorState.opened[doorIndex] = true; // Mark the door as opened
-        this.sendSocketNotification("SAVE_DOOR_STATE", this.doorState); // Save state
+    autoOpenDoor() {
+        if (!this.config.autopen || !this.doorState) return;
 
-        const door = document.querySelectorAll(".door")[doorIndex];
-        if (door) {
-            const number = door.querySelector("span");
-            const img = door.querySelector("img");
+        const today = this.getAdventDay();
+        if (today < 1 || today > 24) return;
 
-            door.classList.add("opened");
+        const i = this.doorState.numbers.indexOf(today);
+        if (i === -1 || this.doorState.autoOpened[i]) return;
+
+        const wasOpened = this.doorState.opened[i];
+        // Save immediately, so a re-render during the animation keeps the door open
+        this.doorState.autoOpened[i] = true;
+        this.doorState.opened[i] = true;
+        this.saveDoorState();
+        if (wasOpened) return;
+
+        const door = this.doorElements[i];
+        if (door && door.isConnected && !door.classList.contains("opening")) {
+            door.classList.remove("locked");
             door.classList.add("opening");
-
-            number.style.visibility = "hidden"; // Ensure the number is hidden
-            if (img) img.style.display = "block"; // Show the image
+        } else {
+            this.updateDom();
         }
-    }
-},
+    },
 
+    /* ---------- state ---------- */
 
     loadDoorState() {
         this.sendSocketNotification("LOAD_DOOR_STATE");
+    },
+
+    saveDoorState() {
+        this.sendSocketNotification("SAVE_DOOR_STATE", this.doorState);
     },
 
     socketNotificationReceived(notification, payload) {
