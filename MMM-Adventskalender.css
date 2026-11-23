@@ -1,9 +1,34 @@
 .advent-calendar {
     position: relative;
     overflow: hidden;
+    box-shadow: 4px 8px 16px rgba(0, 0, 0, 0.5);
+}
+
+.advent-background {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.advent-doors {
+    position: relative;
+    z-index: 1;
+}
+
+.advent-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
 }
 
 .door {
+    position: absolute;
     background-color: rgba(200, 200, 200, 0.5); /* Light gray with transparency */
     border: 2px solid #fff;
     border-radius: 4px;
@@ -12,17 +37,24 @@
     font-weight: bold;
     cursor: pointer;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    position: absolute;
-    overflow: hidden; /* Ensure content stays within the door boundaries */
+    overflow: hidden; /* Keep content inside the door */
     transform-origin: right center; /* Rotate around the right vertical side */
     transition: background-color 0.3s, box-shadow 0.3s;
 }
 
+.door.locked {
+    pointer-events: none; /* Future doors cannot be opened yet */
+}
+
 .door img {
-    width: 100%; 
-    height: 100%; 
-    object-fit: contain; /* Fit image inside the door while maintaining aspect ratio */
-    display: none; /* Hide images initially */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none; /* Image is only visible when the door is fully open */
+}
+
+.door.opened img {
+    display: block;
 }
 
 .door span {
@@ -31,35 +63,19 @@
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 1.5rem;
-    color: black; /* Ensure the number is visible */
+    color: black;
     z-index: 1;
-    visibility: visible; /* Start with the number visible */
 }
 
-.door.opened span {
-    visibility: hidden; /* Hide the number when the door is opened */
-}
-
+/* Hide the number while open and during animations */
+.door.opened span,
 .door.opening span,
 .door.closing span {
-    visibility: hidden; /* Ensure the number is hidden during animations */
+    visibility: hidden;
 }
-
-.door.opened img {
-    display: block; /* Show image when door is opened */
-}
-
-.door.closing img {
-    display: none; /* Hide image when door is closing */
-}
-
-.door.opening img {
-    display: block; /* Show image when opening */
-}
-
 
 .door:hover {
-    background-color: rgba(200, 200, 200, 0.7); /* Slightly less transparent on hover */
+    background-color: rgba(200, 200, 200, 0.7);
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
 }
 
@@ -70,14 +86,13 @@
 }
 
 .door.opening {
-    animation: rotate-door 5s forwards; /* Apply opening animation */
+    animation: rotate-door var(--advent-animation-time, 5s) forwards;
 }
 
 .door.closing {
-    animation: rotate-door 5s reverse; /* Apply closing animation in reverse */
+    animation: rotate-door var(--advent-animation-time, 5s) reverse;
 }
 
-/* Keyframe animations */
 @keyframes rotate-door {
     from {
         transform: rotateY(0deg);
